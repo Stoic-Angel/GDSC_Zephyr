@@ -5,9 +5,7 @@ from request_parser.chat_schemas import SourceModel, QuestionModel
 from settings import Settings
 
 app = FastAPI(title=f"{Settings.PROJECT_NAME} API", version=Settings.PROJECT_VERSION)
-embedchain_app = Pipeline()
-
-
+embedchain_app = Pipeline().from_config("./config.yaml")
 
 
 @app.post("/add")
@@ -15,7 +13,7 @@ async def add_source(source_model: SourceModel):
 
     if source_model.secret_key != Settings.SECRET_KEY:
         return {"message": "Invalid secret key."}
-    
+
     source = source_model.source
     embedchain_app.add(source, data_type="text")
 
