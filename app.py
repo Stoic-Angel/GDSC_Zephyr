@@ -4,7 +4,8 @@ from embedchain import Pipeline
 from request_parser.chat_schemas import SourceModel, QuestionModel
 from settings import Settings
 
-app = FastAPI(title=f"{Settings.PROJECT_NAME} API", version=Settings.PROJECT_VERSION)
+app = FastAPI(title=f"{Settings.PROJECT_NAME} API",
+              version=Settings.PROJECT_VERSION)
 embedchain_app = Pipeline().from_config("./config.yaml")
 
 
@@ -15,7 +16,7 @@ async def add_source(source_model: SourceModel):
         return {"message": "Invalid secret key."}
 
     source = source_model.source
-    embedchain_app.add(source, data_type="text")
+    embedchain_app.add(source, data_type=source_model.data_type)
 
     return {"message": f"Source '{source}' added successfully."}
 
@@ -35,7 +36,8 @@ async def add_source(source_model: SourceModel):
 async def handle_chat(question_model: QuestionModel):
 
     question = question_model.question
-    response = embedchain_app.chat(question, session_id=question_model.session_id)
+    response = embedchain_app.chat(
+        question, session_id=question_model.session_id)
     return {"response": response}
 
 
