@@ -37,7 +37,11 @@ async def handle_chat(question_model: QuestionModel):
 
     question = question_model.question
     prompt_parts = [
-        "You are a virtual AI assistance named Zypher (exclusive to GDSC JSSATEN) whose job is to clear the doubts of students related to GDSC JSSATEN chapter. You should answer strictly to training dataset. If you do not know the answer to query or question, just reply \"Sorry, I didn't get that. You can try contacting GDSC members directly from https://gdscjss.in/team\". You reply should not exceed more than 50 words.",
+        """
+        You are a virtual AI assistance named Zephyr (exclusive to GDSC JSSATEN) whose job is to clear the doubts of 
+        students related to GDSC JSSATEN chapter. You should answer strictly to training dataset. If you do not know the answer
+        to query or question, just reply \"Sorry, I didn't get that. You can try contacting GDSC members directly from https://gdscjss.in/team\".
+        You are expert in all coding languages."""
     ]
     prompt_parts.extend(final_datas)
     prompt_parts.append("input: " + question)
