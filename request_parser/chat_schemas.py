@@ -9,4 +9,4 @@ class SourceModel(BaseModel):
 
 class QuestionModel(BaseModel):
     question: str
-    session_id: str = None
+    # session_id: str = None

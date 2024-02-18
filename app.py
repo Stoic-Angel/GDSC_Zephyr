@@ -1,39 +1,23 @@
-from fastapi import FastAPI, responses
-
+from fastapi import FastAPI, responses, Header, HTTPException, Depends
+from settings import Settings
 from request_parser.chat_schemas import SourceModel, QuestionModel
 from settings import Settings
 from dataset.final_datas import final_datas
-from models.gemini import zephyr_model
+from models.zephyr import zephyr_model
 
 app = FastAPI(title=f"{Settings.PROJECT_NAME} API",
               version=Settings.PROJECT_VERSION)
 
 
-# @app.post("/add")
-# async def add_source(source_model: SourceModel):
-
-#     if source_model.secret_key != Settings.SECRET_KEY:
-#         return {"message": "Invalid secret key."}
-
-#     source = source_model.source
-#     embedchain_app.add(source, data_type=source_model.data_type)
-
-#     return {"message": f"Source '{source}' added successfully."}
-
-
-# @app.post("/query")
-# async def handle_query(question_model: QuestionModel):
-#     """
-#     Handles a query to the EmbedChain app.
-#     Expects a JSON with a "question" key.
-#     """
-#     question = question_model.question
-#     answer = embedchain_app.query(question)
-#     return {"answer": answer}
+async def get_api_key(authorization: str = Header(...)):
+    expected_key = Settings.SECRET_KEY
+    if authorization != f"Bearer {expected_key}":
+        raise HTTPException(status_code=401, detail="Invalid API key")
+    return authorization
 
 
 @app.post("/chat")
-async def handle_chat(question_model: QuestionModel):
+async def handle_chat(question_model: QuestionModel, api_key: str = Depends(get_api_key)):
 
     question = question_model.question
     prompt_parts = [
