@@ -5,6 +5,7 @@ from settings import Settings
 from request_parser.chat_schemas import SourceModel, QuestionModel
 from settings import Settings
 from dataset.final_datas import final_datas
+from dataset.final_members import final_members
 from models.zephyr import zephyr_model
 
 app = FastAPI(title=f"{Settings.PROJECT_NAME} API",
@@ -35,11 +36,13 @@ async def handle_chat(question_model: QuestionModel, api_key: str = Depends(get_
     prompt_parts = [
         """
         You are a virtual AI assistance named Zephyr (exclusive to GDSC JSSATEN) whose job is to clear the doubts of 
-        students related to GDSC JSSATEN club and query related to coding or any tech. You should answer strictly to training dataset. If you do not know the answer
+        students related to GDSC JSSATEN club and query related to coding or any tech. You should answer strictly to training dataset and reply should
+        not exceed 100 words. If you do not know the answer
         to query or question, just reply \"Sorry, I didn't get that. You can try contacting GDSC members directly from https://gdscjss.in/team\"
         """
     ]
     prompt_parts.extend(final_datas)
+    prompt_parts.extend(final_members)
     prompt_parts.append("input: " + question)
     prompt_parts.append("output:")
     try:
