@@ -1,0 +1,145 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>GDSC JSSATEN Zephyr Chat</title>
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Roboto:300,400,500,700&display=swap" />
+    <link rel="stylesheet" href="https://fonts.googleapis.com/icon?family=Material+Icons" />
+    <link rel="stylesheet" href="https://unpkg.com/@mui/material@latest/dist/mui.min.css" />
+    </head>
+<body>
+    <style>
+        /* Add your custom CSS styles here */
+.app {
+    text-align: center;
+    padding: 20px;
+}
+
+#chat-form {
+    display: flex;
+    margin-bottom: 20px;
+}
+
+#question {
+    flex-grow: 1;
+    padding: 10px;
+    border: 1px solid #ccc;
+    border-radius: 5px;
+}
+
+#answer {
+    padding: 10px;
+    border: 1px solid #ccc;
+    border-radius: 5px;
+}
+
+/* Style for the error dialog */
+.modal {
+    display: none;
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(0, 0, 0, 0.4);
+}
+
+.modal-content {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    background-color: white;
+    padding: 20px;
+    border: 1px solid #ccc;
+    border-radius: 5px;
+}
+
+.close {
+    color: #aaa;
+    float: right;
+    font-size: 16px;
+    font-weight: bold;
+}
+
+.close:hover,
+.close:focus {
+    color: black;
+    text-decoration: none;
+    cursor: pointer;
+}
+
+    </style>
+    <div class="app">
+        <h1>GDSC JSSATEN Zephyr Chat</h1>
+        <form id="chat-form" onsubmit="return handleSubmit(event)">
+            <input type="text" id="question" placeholder="Ask Zephyr a question">
+            <button type="submit">Send</button>
+        </form>
+        <div id="answer"></div>
+        <div id="error-dialog" class="modal"> <div class="modal-content">
+                <span class="close">&times;</span>
+                <h3>Error</h3>
+                <p id="error-message"></p>
+            </div>
+        </div>
+    </div>
+    <script>
+        const API_URL = 'http://localhost:8000/chat'; // Replace with your server address
+const API_KEY = '2f74125481df4c363cce3fa358933fba'; // Replace with your actual API key
+
+const chatForm = document.getElementById('chat-form');
+const questionInput = document.getElementById('question');
+const answerDiv = document.getElementById('answer');
+const errorDialog = document.getElementById('error-dialog');
+const errorMessage = document.getElementById('error-message');
+const closeBtn = document.getElementsByClassName('close')[0];
+
+closeBtn.addEventListener('click', () => {
+  errorDialog.style.display = 'none';
+});
+
+window.addEventListener('click', (event) => {
+  if (event.target === errorDialog) {
+    errorDialog.style.display = 'none';
+  }
+});
+
+chatForm.addEventListener('submit', async (event) => {
+  event.preventDefault();
+
+  const question = questionInput.value;
+  answerDiv.textContent = 'Loading...'; // Indicate loading state
+
+  try {
+    const response = await fetch(API_URL, {
+      method: 'POST',
+      headers: {
+        'Authorization': `Bearer ${API_KEY}`,
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({ question }),
+    });
+
+    if (!response.ok) {
+      throw new Error(`Error: ${response.statusText}`);
+    }
+
+    const data = await response.json();
+
+    if (data.error) {
+      throw new Error(data.error);
+    }
+
+    answerDiv.textContent = data[0].answer;
+  } catch (error) {
+    errorMessage.textContent = error.message;
+    errorDialog.style.display = 'block';
+  } finally {
+    questionInput.value = ''; // Clear input after submission
+  }
+});
+
+    </script> </body>
+</html>
