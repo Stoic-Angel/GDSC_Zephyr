@@ -73,7 +73,7 @@
     </style>
     <div class="app">
         <h1>GDSC JSSATEN Zephyr Chat</h1>
-        <form id="chat-form" onsubmit="return handleSubmit(event)">
+        <form id="chat-form">
             <input type="text" id="question" placeholder="Ask Zephyr a question">
             <button type="submit">Send</button>
         </form>
@@ -86,7 +86,7 @@
         </div>
     </div>
     <script>
-        const API_URL = 'http://localhost:8000/chat'; // Replace with your server address
+        const API_URL = 'http://ec2-44-201-124-80.compute-1.amazonaws.com:8000/chat' //'http://localhost:8000/chat'; // Replace with your server address
 const API_KEY = '2f74125481df4c363cce3fa358933fba'; // Replace with your actual API key
 
 const chatForm = document.getElementById('chat-form');
