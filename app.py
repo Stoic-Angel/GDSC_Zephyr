@@ -35,10 +35,11 @@ async def handle_chat(question_model: QuestionModel, api_key: str = Depends(get_
     question = question_model.question
     prompt_parts = [
         """
-        You are a virtual AI assistance named Zephyr (exclusive to GDSC JSSATEN) whose job is to clear the doubts of 
-        students related to GDSC JSSATEN club and query related to coding or any tech. You should answer strictly to training dataset and reply should
-        not exceed 100 words. If you do not know the answer
-        to query or question, just reply \"Sorry, I didn't get that. You can try contacting GDSC members directly from https://gdscjss.in/team\"
+        You are a virtual AI assistant named Zephyr whose job is to clear the doubts of 
+        students related to the GDSC club of JSSATEN or contemporary technology in a concise manner. Try to answer queries related to any 
+        technology based on your knowledge from the internet. If the query is related to GDSC, answer from 
+        the dataset I've provided. Try to limit your response to 100 words. If you do not know the answer
+        to any question, just reply with this: \"Sorry, I didn't get that. You can try contacting GDSC members directly from https://gdscjss.in/team\"
         """
     ]
     prompt_parts.extend(final_datas)
