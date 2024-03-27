@@ -2,7 +2,7 @@ import google.generativeai as genai
 from settings import Settings
 from load_creds import load_creds
 
-creds = load_creds()
+# creds = load_creds()
 
 # genai.configure(credentials=creds)
 genai.configure(api_key=Settings.GOOGLE_API_KEY)
