@@ -1,4 +1,11 @@
-Timestamp,Email Address,Your Name,Year,Branch,Domain,"Brief Intro",LinkedIn Profile Link,Github Profile Link
+Timestamp,Email Address,Your Name,Year,Branch,Domain,"Tell us about yourself.
+Instruction:
+- Should contain brief introduction about yourself
+- What kind of technologies you work with
+- Your professional working experiences
+- Any achievements
+
+**Please fill this information in as much detail as possible. This information will be used by the LLM model**",LinkedIn Profile Link,Github Profile Link
 2/17/2024 21:45:50,vaanipathariya@gmail.com,Vaani Pathariya,3,CSE,Web,"I'm a passionate pre-final year computer science student with a deep love for technology and innovation. My expertise spans full-stack web development, machine learning, and data structures, with a mastery of languages like Python and C++. I'm also an active contributor to open source projects, sharing my technical insights and experiences. With a strong foundation in problem-solving I'm excited to continue exploring the ever-evolving world of technology and making a positive impact.
 
 As a top 30 winner of Samsung Solve for Tomorrow ,SIH Finalist , ICC Next in 2.0 hackathon top 67 teams qualifier (worldwide ) and the 2nd runner-up at Trident Hacks Nationals '23, I've honed my skills in both individual and team settings. Currently serving as a web developer at GDSC JSSATEN and Microsoft Learn Student Ambassador, I'm deeply committed to empowering others through technology education. Let's connect and explore opportunities to collaborate or discuss our shared passion for technology and innovation!",https://www.linkedin.com/in/vaani-pathariya/,https://github.com/Vaani-pathariya
@@ -103,3 +110,49 @@ I am 2 star on codechef and i do competitive programming in java",https://www.li
 2/20/2024 4:30:54,ashishkushwahacb@gmail.com,Ashish Kushwaha,3,CSE,AI/ML,"I am a Python Developer at The Mango Jelly, a startup that provides natural language processing services using large language models (LLMs) and generative artificial intelligence (GenAI). In this role, I pipeline LLMs and other GenAI tools into the backend of the web applications that serve the client's needs. I also use Python, PostgreSQL, Redis, and Celery to build scalable and reliable web applications.
 
 Besides working as a Python Developer, I am also pursuing my Bachelor of Technology in Computer Science at JSS Academy of Technical Education, Noida, where I am passionate about learning new technologies and solving real-world problems. I have completed multiple certifications, such as AWS Educate Introduction to Cloud 101, Problem Solving (Basic) by HackerRank, and Kick Start 2022 by Google, to enhance my skills and knowledge. I am also the ML Lead at Developer Student Clubs JSSATEN, where I mentor and guide other students in learning and applying machine learning concepts and tools. Furthermore, I have participated in several competitive programming contests, such as ICPC, CodeChef, and Codeforces, and achieved a 3-star rating at CodeChef and a Pupil rating at Codeforces. I am always eager to take on new challenges and collaborate with others to create impactful solutions.",https://linkedin.com/in/ashishkingdom,https://github.com/AshishKingdom/
+2/21/2024 11:33:12,goelk0308@gmail.com,Kanak Goel,2,IT,App,"Hi , I am an Android developer and a Competitive Programmer . I am learning to design, implement and test high-performance mobile applications. I am proficient in Java and currently expanding my skill set to include Kotlin and Jetpack Compose to stay updated with the latest technologies in Android development. 
+In addition to this ,  I love engaging in the tech community by attending conferences, meetups, and participating in online forums.
+Looking forward, I am excited about contributing to cutting-edge projects, leveraging emerging technologies, and continuously pushing the boundaries of what is possible in the world of Android development and Competitive Programming.",https://www.linkedin.com/in/kanakgoel03,https://github.com/phoenix-kanak
+2/21/2024 11:35:14,ayushmaserati@gmail.com,Ayush Agrawal,2,CSE,App,"Hey there I am Ayush Agrawal I am an App Developer at GDSC JSSATEN I am Enthusiastic about making robust and user friendly apps. I am also a Competitive Programmer and love to solve real world problems using programming.
+I am proficient at programming languages like Java, Python, Kotlin. I am currently working to expand my technical skills by including Jetpack Compose and other Trending technology in Android Development.
+In addition to this , I love engaging in the tech community by attending conferences, meetups, and participating in online forums.
+Looking forward, I am excited about contributing to cutting-edge projects, leveraging emerging technologies, and continuously pushing the boundaries of what is possible in the world of Android development and Competitive Programming.",https://www.linkedin.com/in/its-ayushh-here,https://github.com/Agrawal-Ayush-009
+2/26/2024 13:07:34,vrishhti@gmail.com,Vrishhti Goel,3,IT,Design,"A passionate designer and DSA enthusiast, weaving together precision and  technology to solve real life problems :)",https://www.linkedin.com/in/vrishhti-goel-58aa1b218?utm_source=share&utm_campaign=share_via&utm_content=profile&utm_medium=android_app,https://github.com/Vrishhti
+3/27/2024 13:23:06,cvhack200@gmail.com,Shubhransh Bhaskar,4,CSE,Design,"My name's Shubhransh Bhaskar & I'm currently working as a Product Designer at Preplaced. I am also Lead @ GDSC JSSATEN
+My work at Preplaced currently involves working on their Design System & creating end to end experiences & features in a very fast paced environment. I've helped launch multiple features across our Mentor & Mentee Dashboards which have clearly impacted the metrics with a huge improvement.
+
+Over the past three years, I have been working as a Product Design Intern at NoCap Meta Bangalore, Collab BLR & TNC360 Hyderabad and simultaneously serving my freelance clients including a project with Shantanu Kumar (skh.design)
+
+One of my passion projects that I've been currently working on is the fold.money Design System along with their web interface which sits individually with the tag view.money Design System. I've been building this DS in public with video walkthroughs on my YT channel and they surely received a lot of love from other renowned designers.
+
+My design toolkit includes proficiency in Product & Interface Design, Personal & Professional Branding, Design Systems, User Experience & Research. I'm well versed in industry-standard softwares such as Adobe Creative Suite, Figma, Framer.
+
+Apart from design, I've had successful accomplishments in different domains as well as part of my building years.
+
+- YouTuber with an active subscriber count of more than 5,000 and over 4 Million Views
+- Dominated Indian eCommerce market from 2016-2019, by becoming one of the sole providers of Valorant Points in India, achieving monthly gross sales of INR 20 Lakh.
+- Won the Smart India Hackathon in 2022.
+- Became the GDSC Lead 2023 at my institution.
+
+All the relevant information about me or the projects I've worked on can be found on my portfolio website below along with the respective links for my social media handles.
+
+Portfolio Website : https://popular-everyone-871797.framer.app/
+LinkedIn : linkedin.com/in/iamshubhransh
+YouTube : youtube.com/@iamshubhransh
+Contra Profile : contra.com/iamshubhransh
+Twitter : twitter.com/iamshubhransh
+Instagram : instagram.com/notshubhransh",https://www.linkedin.com/in/iamshubhransh/,https://github.com/iamshubhransh
+3/27/2024 13:49:55,yashutiwari22@gmail.com,Yash Tiwari ,3,IT,Web,"Yash Tiwari (@yashArrived) initially a Web Developer and Media Lead at GDSC JSSATEN, have evolved into the role of Media Lead. I am known for my dedication to growth and development, I embodies the ethos of ""Developing to Develop."" 
+
+Renowned for his readiness to assist and learn new things including his openness to forging new connections.
+
+Won a Hackathon at IIIT Delhi.
+I have organised almost more than 10 workshops and talk sessions where I hosted it and was the speaker for the session where I dive deep into several topics and complexities.
+
+I have a even interest in dramatics too , won 1st price is twisted film / spoof in AIIMS DELHI fest known as PULSE.
+
+Won 3rd place in AIIMS Delhi in Nukkad competition.
+Won 2nd place in Street play (Nukkad) in DME college Noida.
+",https://www.linkedin.com/in/yasharrived,https://github.com/yashArrived
+3/27/2024 14:32:05,aryankushwaha3101@gmail.com,Aryan Kushwaha,2,CSE (AI/ML),Design,"Hello, this is Aryan aka funinkina. I am a designer here at GDSC. I work with figma, adobe photoshop creating UI?UX for apps and websites. I am familiar with python, go, c/c++, with web development. Currently i am working and learning in Machine Learning field and looking forward to it.",https://linkedin.com/in/funinkina,https://github.com/funinkina
+3/27/2024 17:44:38,swapnilskumar99@gmail.com,Swapnil Singh,2,CSE (DS),Web,"I'm a dedicated coder with a passion for technology, specializing in MERN Stack, Python, LLMs, and Flutter. I've participated in various open-source events like GSSOC and Hacktoberfest, contributing to the community while honing my skills. My professional experience reflects my commitment to coding, and I'm always eager to tackle new challenges and push boundaries in the tech world.",https://www.linkedin.com/in/hereisSwapnil,https://github.com/hereisswapnil

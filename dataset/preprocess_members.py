@@ -23,6 +23,8 @@ df = pd.read_csv('members_dataset.csv')
 # "output: <processed output after combining with other columns>",
 # .... ]
 
+df2 = pd.DataFrame(columns=['input', 'output'])
+
 final_members = []
 for i in range(len(df)):
     try:
@@ -34,8 +36,13 @@ for i in range(len(df)):
         continue
     final_members.append(input)
     final_members.append(output)
+    df2.loc[-1] = [input[10:-3],output[11:-3]]
+    df2.index = df2.index + 1
+    df2 = df2.sort_index()
     print(f'Processed {i+1} members')
 
 with open('final_members.py', 'w') as f:
     f.write(f'final_members = [{",".join(final_members)}]')
     f.close()
+
+df2.to_csv('final_members.csv', index=False)
