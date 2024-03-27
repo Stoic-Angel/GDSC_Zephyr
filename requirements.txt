@@ -24,6 +24,7 @@ Deprecated==1.2.14
 distro==1.9.0
 ecdsa==0.18.0
 embedchain==0.1.72
+et-xmlfile==1.1.0
 exceptiongroup==1.2.0
 fastapi==0.104.0
 filelock==3.13.1
@@ -32,8 +33,11 @@ frozenlist==1.4.1
 fsspec==2023.12.2
 google-ai-generativelanguage==0.4.0
 google-api-core==2.16.2
+google-api-python-client==2.123.0
 google-auth==2.27.0
-google-generativeai==0.3.2
+google-auth-httplib2==0.2.0
+google-auth-oauthlib==1.2.0
+google-generativeai==0.4.1
 googleapis-common-protos==1.62.0
 gptcache==0.1.43
 greenlet==3.0.3
@@ -41,6 +45,7 @@ grpcio==1.60.1
 grpcio-status==1.60.1
 h11==0.14.0
 httpcore==1.0.2
+httplib2==0.22.0
 httptools==0.6.1
 httpx==0.26.0
 huggingface-hub==0.20.3
@@ -66,6 +71,7 @@ numpy==1.26.3
 oauthlib==3.2.2
 onnxruntime==1.16.3
 openai==1.10.0
+openpyxl==3.1.2
 opentelemetry-api==1.22.0
 opentelemetry-exporter-otlp-proto-common==1.22.0
 opentelemetry-exporter-otlp-proto-grpc==1.22.0
@@ -78,6 +84,7 @@ opentelemetry-semantic-conventions==0.43b0
 opentelemetry-util-http==0.43b0
 overrides==7.7.0
 packaging==23.2
+pandas==2.2.1
 posthog==3.3.3
 proto-plus==1.23.0
 protobuf==4.25.2
@@ -88,6 +95,7 @@ pycparser==2.21
 pydantic==2.6.0
 pydantic_core==2.16.1
 Pygments==2.17.2
+pyparsing==3.1.2
 pypdf==3.17.4
 PyPika==0.48.9
 pyproject_hooks==1.0.0
@@ -95,6 +103,7 @@ pysbd==0.3.4
 python-dateutil==2.8.2
 python-dotenv==1.0.1
 python-jose==3.3.0
+pytz==2024.1
 PyYAML==6.0.1
 regex==2023.12.25
 requests==2.31.0
@@ -116,6 +125,8 @@ tqdm==4.66.1
 typer==0.9.0
 typing-inspect==0.9.0
 typing_extensions==4.9.0
+tzdata==2024.1
+uritemplate==4.1.1
 urllib3==2.1.0
 uvicorn==0.23.2
 uvloop==0.19.0

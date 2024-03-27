@@ -4,13 +4,14 @@ from load_creds import load_creds
 
 creds = load_creds()
 
-genai.configure(credentials=creds)
+# genai.configure(credentials=creds)
+genai.configure(api_key=Settings.GOOGLE_API_KEY)
 
 print('Available base models:', [m.name for m in genai.list_models()])
 
 # Set up the model
 generation_config = {
-    "temperature": 0,
+    "temperature": 0.5,
     "top_p": 1,
     "top_k": 1,
     "max_output_tokens": 2048,
@@ -35,7 +36,7 @@ safety_settings = [
     },
 ]
 
-zephyr_model = genai.GenerativeModel(model_name="tunedModels/gdsczephyr-xkrx9ry35pja",
+zephyr_model = genai.GenerativeModel(model_name="gemini-pro",
                                      generation_config=generation_config,
                                      safety_settings=safety_settings)
 

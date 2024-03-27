@@ -7,6 +7,7 @@ from settings import Settings
 from dataset.final_datas import final_datas
 from dataset.final_members import final_members
 from models.zephyr import zephyr_model
+import pandas as pd
 
 app = FastAPI(title=f"{Settings.PROJECT_NAME} API",
               version=Settings.PROJECT_VERSION)
@@ -20,6 +21,13 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
+
+final_data = []
+df = pd.read_excel("dataset/final_llm_data.xlsx")
+for i in range(len(df)):
+    final_data.append(f"input: {df.iloc[i, 0]}")
+    final_data.append(f"output: {df.iloc[i, 1]}")
+
 
 
 async def get_api_key(authorization: str = Header(...)):
@@ -36,13 +44,14 @@ async def handle_chat(question_model: QuestionModel, api_key: str = Depends(get_
     prompt_parts = [
         """
         You are a virtual AI assistance named Zephyr (exclusive to GDSC JSSATEN) whose job is to clear the doubts of 
-        students related to GDSC JSSATEN club. You should answer strictly to training dataset and reply should
-        not exceed 100 words. If you do not know the answer
+        students related to GDSC JSSATEN club. You should answer strictly to given input/output example dataset. Please make sure that your reply should
+        not exceed 100 words. Please make sure your response should reflect the tone of AI assisstance Zephyr. If you do not know the answer
         to query or question, just reply \"Sorry, I didn't get that. You can try contacting GDSC members directly from https://gdscjss.in/team\"
         """
     ]
     # prompt_parts.extend(final_datas)
     # prompt_parts.extend(final_members)
+    prompt_parts.extend(final_data)
     prompt_parts.append("input: " + question)
     prompt_parts.append("output:")
     try:
