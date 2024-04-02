@@ -11,7 +11,7 @@ print('Available base models:', [m.name for m in genai.list_models()])
 
 # Set up the model
 generation_config = {
-    "temperature": 0.5,
+    "temperature": 0.1,
     "top_p": 1,
     "top_k": 1,
     "max_output_tokens": 2048,
