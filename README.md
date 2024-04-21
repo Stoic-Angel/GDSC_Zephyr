@@ -1,4 +1,4 @@
-# GDSC Zypher
+# GDSC Zephyr
 
 ## How to run it locally?
 
