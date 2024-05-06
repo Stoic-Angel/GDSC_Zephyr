@@ -1,54 +1,31 @@
-import google.generativeai as genai
 from settings import Settings
-from load_creds import load_creds
-
-# creds = load_creds()
-
-# genai.configure(credentials=creds)
-genai.configure(api_key=Settings.GOOGLE_API_KEY)
-
-print('Available base models:', [m.name for m in genai.list_models()])
+from llama_index.core import Settings
+from llama_index.llms.openai import OpenAI
+from llama_index.embeddings.openai import OpenAIEmbedding
 
 # Set up the model
-generation_config = {
-    "temperature": 0.1,
-    "top_p": 1,
-    "top_k": 1,
-    "max_output_tokens": 2048,
-}
 
-safety_settings = [
-    {
-        "category": "HARM_CATEGORY_HARASSMENT",
-        "threshold": "BLOCK_MEDIUM_AND_ABOVE"
-    },
-    {
-        "category": "HARM_CATEGORY_HATE_SPEECH",
-        "threshold": "BLOCK_MEDIUM_AND_ABOVE"
-    },
-    {
-        "category": "HARM_CATEGORY_SEXUALLY_EXPLICIT",
-        "threshold": "BLOCK_MEDIUM_AND_ABOVE"
-    },
-    {
-        "category": "HARM_CATEGORY_DANGEROUS_CONTENT",
-        "threshold": "BLOCK_MEDIUM_AND_ABOVE"
-    },
-]
 
-zephyr_model = genai.GenerativeModel(model_name="gemini-pro",
-                                     generation_config=generation_config,
-                                     safety_settings=safety_settings)
+def get_embed_model():
+  ## set embedding model
+  embed_model = OpenAIEmbedding(model="text-embedding-3-large")
+  Settings.embed_model = embed_model
 
-# def test():
-#     from dataset.final_datas import final_datas
-#     while 1:
-#         question = input("You: ")
-#         prompt_parts = [
-#             "You are a virtual AI assistance named Zypher (exclusive to GDSC JSSATEN) whose job is to clear the doubts of students related to GDSC JSSATEN chapter. You should answer strictly to training dataset. If you do not know the answer to query or question, just reply \"Sorry, I didn't get that. You can try contacting GDSC members directly from https://gdscjss.in/team\". You reply should not exceed more than 50 words.",
-#         ]
-#         prompt_parts.extend(final_datas)
-#         prompt_parts.append("input: " + question)
-#         prompt_parts.append("output:")
-#         response = zephyr_model.generate_content(prompt_parts)
-#         print(f"GDSC Zephyr: {response.text}")
+  ## set llm model
+  Settings.llm = OpenAI("gpt-3.5-turbo-0125", temperature=0.9)
+
+  return embed_model
+
+from llama_index.core import PromptTemplate
+
+zephyr_qa_prompt = (
+    "You are a virtual AI assistance named Zephyr (exclusive to GDSC JSSATEN) whose job is to clear the doubts of students related to GDSC JSSATEN club. "
+    "You must answer for query/question using only the context provided in less than 50 words"
+    "If you are not able to answer query using the context, just reply \"Sorry, I didn't get that. You can try contacting GDSC members directly from https://gdscjss.in/team\" "
+    "Context Information:  "
+    "{context_str}  "
+    "Query:  "
+    "{query_str} "
+    "Answer: "
+)
+zephyr_qa_prompt_template = PromptTemplate(zephyr_qa_prompt)
