@@ -1,7 +1,7 @@
 from dotenv import load_dotenv
 import os
 
-load_dotenv()
+load_dotenv(".env")
 
 
 class Settings:
@@ -12,7 +12,7 @@ class Settings:
 
     JWT_ACCESS_KEY = os.getenv("JWT_ACCESS_KEY")
     JWT_ALGORITHM = os.getenv("JWT_ALGORITHM")
-    ACCESS_TOKEN_EXPIRE_MINUTES = int(os.getenv("ACCESS_TOKEN_EXPIRE_MINUTES"))
+    ACCESS_TOKEN_EXPIRE_MINUTES = 60
 
     SECRET_KEY = os.getenv("SECRET_KEY")
     OPENAI_API_KEY = os.getenv("OPENAI_API_KEY")

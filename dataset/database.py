@@ -1,16 +1,14 @@
 from llama_index.core import Document
 from llama_index.core.schema import MetadataMode
-from llama_index.vector_stores.chroma import ChromaVectorStore
-from llama_index.core import VectorStoreIndex, StorageContext
+from llama_index.core import VectorStoreIndex
 from llama_index.core.node_parser import SentenceSplitter
-import chromadb
 
 from models.zephyr import get_embed_model
 
 import pandas as pd
 
 def load_doc():
-    df = pd.read_csv("final_data.csv")
+    df = pd.read_csv("final.csv")
 
     with open("final_data.txt", "w") as f:
         for i in range(len(df)):
@@ -33,24 +31,13 @@ def load_doc():
         doc.append(document)
     return doc
 
-def get_index(documents, embed_model, db_exists=False):
-  db = chromadb.PersistentClient(path="./chroma_db")
-  collection = db.get_or_create_collection("quickstart")
+def get_index(documents, embed_model):
 
-  vector_store = ChromaVectorStore(chroma_collection=collection)
   text_splitter = SentenceSplitter(chunk_size=128, chunk_overlap=16)
-
-  if not db_exists:
-    ## save vectordb on disk (use only one time)
-    index =  VectorStoreIndex.from_documents(documents, transformations=[text_splitter])
-    # storage_context = StorageContext.from_defaults(vector_store=vector_store)
-    # index = VectorStoreIndex.from_documents(documents, storage_context=storage_context, transformations=[text_splitter])
-  else:
-    index = VectorStoreIndex.from_vector_store(vector_store, embed_model=embed_model)
-
+  index =  VectorStoreIndex.from_documents(documents, transformations=[text_splitter])
   return index
 
 
 embed_model = get_embed_model()
 doc = load_doc()
-index = get_index(doc, embed_model, db_exists=False)
+index = get_index(doc, embed_model)
