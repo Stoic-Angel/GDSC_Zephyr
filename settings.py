@@ -15,4 +15,4 @@ class Settings:
     ACCESS_TOKEN_EXPIRE_MINUTES = int(os.getenv("ACCESS_TOKEN_EXPIRE_MINUTES"))
 
     SECRET_KEY = os.getenv("SECRET_KEY")
-    GOOGLE_API_KEY = os.getenv("GOOGLE_API_KEY")
+    OPENAI_API_KEY = os.getenv("OPENAI_API_KEY")

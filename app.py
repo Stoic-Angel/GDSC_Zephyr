@@ -1,13 +1,13 @@
 from fastapi import FastAPI, responses, Header, HTTPException, Depends
 from fastapi.middleware.cors import CORSMiddleware
 
-from settings import Settings
 from request_parser.chat_schemas import SourceModel, QuestionModel
 from settings import Settings
-from dataset.final_datas import final_datas
-from dataset.final_members import final_members
-from models.zephyr import zephyr_model
-import pandas as pd
+from dataset.database import index
+from models.zephyr import zephyr_qa_prompt_template
+
+app = FastAPI(title=f"{Settings.PROJECT_NAME} API",
+              version=Settings.PROJECT_VERSION)
 
 app = FastAPI(title=f"{Settings.PROJECT_NAME} API",
               version=Settings.PROJECT_VERSION)
@@ -22,12 +22,6 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-final_data = []
-df = pd.read_excel("dataset/final_llm_data.xlsx")
-for i in range(len(df)):
-    final_data.append(f"input: {df.iloc[i, 0]}")
-    final_data.append(f"output: {df.iloc[i, 1]}")
-
 
 
 async def get_api_key(authorization: str = Header(...)):
@@ -37,28 +31,27 @@ async def get_api_key(authorization: str = Header(...)):
     return authorization
 
 
+def get_query_engine(index):
+    query_engine = index.as_query_engine(
+    similarity_top_k=2,
+    verbose=True
+  )
+    query_engine.update_prompts(
+        {"response_synthesizer:text_qa_template":zephyr_qa_prompt_template}
+    )
+
+    return query_engine
+
+
+
 @app.post("/chat")
 async def handle_chat(question_model: QuestionModel, api_key: str = Depends(get_api_key)):
 
     question = question_model.question
-    prompt_parts = [
-        """
-        You are a virtual AI assistance named Zephyr (exclusive to GDSC JSSATEN) whose job is to clear the doubts of 
-        students related to GDSC JSSATEN club. You should answer strictly to given input/output example dataset for queries about GDSC. 
-        Make sure that your reply is concise and presentable. If you do not know the answer
-        to query or question, just reply \"Sorry, I didn't get that. You can try contacting GDSC members directly from https://gdscjss.in/team\"
-        Ensure the following important instruction. IMPORTANT INSTRUCTION: {When answering doubts about GDSC members, write one line answers ONLY.
-        DO NOT give out their social links unless explicitly asked to do so.}
-        """
-    ]
-    # prompt_parts.extend(final_datas)
-    # prompt_parts.extend(final_members)
-    prompt_parts.extend(final_data)
-    prompt_parts.append("input: " + question)
-    prompt_parts.append("output:")
+    query_engine = get_query_engine(index)
     try:
-        response = zephyr_model.generate_content(prompt_parts)
-        return {"answer": response.text}, 200
+        response = query_engine.query(question)
+        return {"answer": response}, 200
     except Exception as e:
         return {"error": str(e)}, 500
 
