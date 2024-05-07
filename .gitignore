@@ -7,5 +7,6 @@ db/
 token.json
 client_secret.json
 chroma_db
-load_creds.py
 final_data.txt
+config
+load_creds
