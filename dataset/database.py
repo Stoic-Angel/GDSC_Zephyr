@@ -34,14 +34,10 @@ def load_doc():
     return doc
 
 def get_index(documents, embed_model, db_exists=False):
-  ## create vectordb
   db = chromadb.PersistentClient(path="./chroma_db")
   collection = db.get_or_create_collection("quickstart")
 
-  ## create vector store
   vector_store = ChromaVectorStore(chroma_collection=collection)
-
-  ## transformation
   text_splitter = SentenceSplitter(chunk_size=128, chunk_overlap=16)
 
   if not db_exists:

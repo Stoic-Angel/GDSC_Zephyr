@@ -3,7 +3,7 @@ from fastapi.middleware.cors import CORSMiddleware
 
 from request_parser.chat_schemas import SourceModel, QuestionModel
 from settings import Settings
-from dataset.database import get_index
+from dataset.database import index
 from models.zephyr import zephyr_qa_prompt_template
 
 import pandas as pd
@@ -45,7 +45,6 @@ async def get_query_engine(index):
 async def handle_chat(question_model: QuestionModel, api_key: str = Depends(get_api_key)):
 
     question = question_model.question
-    index = get_index()
     query_engine = get_query_engine(index)
     try:
         response = query_engine.query(question)
