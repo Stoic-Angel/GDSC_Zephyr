@@ -33,8 +33,8 @@ def load_doc():
 
 def get_index(documents, embed_model):
 
-  text_splitter = SentenceSplitter(chunk_size=128, chunk_overlap=16)
-  index =  VectorStoreIndex.from_documents(documents, transformations=[text_splitter])
+#   text_splitter = SentenceSplitter(chunk_size=128, chunk_overlap=16)
+  index =  VectorStoreIndex.from_documents(documents)
   return index
 
 

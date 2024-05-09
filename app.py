@@ -33,7 +33,6 @@ async def get_api_key(authorization: str = Header(...)):
 def get_query_engine(index):
     query_engine = index.as_query_engine(
         similarity_top_k=2,
-        verbose=True
     )
     query_engine.update_prompts(
         {"response_synthesizer:text_qa_template": zephyr_qa_prompt_template}
@@ -49,7 +48,11 @@ async def handle_chat(question_model: QuestionModel, api_key: str = Depends(get_
     query_engine = get_query_engine(index)
     try:
         response = query_engine.query(question)
-        return {"answer": response.response}, 200
+        for key in response.source_nodes:
+            print(key)
+            print("-"*50)
+        response = response.response
+        return {"answer": response}, 200
     except Exception as e:
         return {"error": str(e)}, 500
 
