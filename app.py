@@ -6,8 +6,7 @@ from settings import Settings
 from dataset.database import index
 from models.zephyr import zephyr_qa_prompt_template
 
-app = FastAPI(title=f"{Settings.PROJECT_NAME} API",
-              version=Settings.PROJECT_VERSION)
+
 
 app = FastAPI(title=f"{Settings.PROJECT_NAME} API",
               version=Settings.PROJECT_VERSION)
@@ -21,8 +20,6 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
-
-
 
 async def get_api_key(authorization: str = Header(...)):
     expected_key = Settings.SECRET_KEY
@@ -39,9 +36,11 @@ def get_query_engine(index):
     query_engine.update_prompts(
         {"response_synthesizer:text_qa_template":zephyr_qa_prompt_template}
     )
-
     return query_engine
 
+def get_chat_engine(index):
+    chat_engine = index.as_chat_engine(chat_mode="openai")
+    return chat_engine
 
 
 @app.post("/chat")
@@ -49,8 +48,10 @@ async def handle_chat(question_model: QuestionModel, api_key: str = Depends(get_
 
     question = question_model.question
     query_engine = get_query_engine(index)
+    chat_engine = get_chat_engine(index, tool_choice="query_engine_tool")
+
     try:
-        response = query_engine.query(question)
+        response = chat_engine.chat(question)
         return {"answer": response}, 200
     except Exception as e:
         return {"error": str(e)}, 500
