@@ -22,11 +22,11 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-# async def get_api_key(authorization: str = Header(...)):
-#     expected_key = Settings.SECRET_KEY
-#     if authorization != f"Bearer {expected_key}":
-#         raise HTTPException(status_code=401, detail="Invalid API key")
-#     return authorization
+async def get_api_key(authorization: str = Header(...)):
+    expected_key = Settings.SECRET_KEY
+    if authorization != f"Bearer {expected_key}":
+        raise HTTPException(status_code=401, detail="Invalid API key")
+    return authorization
 
 
 def get_retriever(index):
@@ -51,7 +51,7 @@ async def create_chat(response: Response):
 
 
 @app.post("/chat")
-async def handle_chat(question_model: QuestionModel):
+async def handle_chat(question_model: QuestionModel, api_key: str = Depends(get_api_key)):
     question = question_model.question
     session = question_model.session_id
     llm = get_model()
