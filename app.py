@@ -56,7 +56,7 @@ async def create_chat(response: Response):
 
 
 @app.post("/chat")
-async def handle_chat(question_model: QuestionModel,  api_key: str = Depends(get_api_key)):
+async def handle_chat(question_model: QuestionModel, api_key: str = Depends(get_api_key)):
     question = question_model.question
     session = question_model.session_id
     llm = get_model()
@@ -69,7 +69,7 @@ async def handle_chat(question_model: QuestionModel,  api_key: str = Depends(get
     
     chat.append({"role": "user", "content": question})
 
-    # try:
+
     response = llm.chat.completions.create(
         model = "gpt-3.5-turbo-0125",
         messages = chat,
