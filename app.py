@@ -4,9 +4,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from request_parser.chat_schemas import SourceModel, QuestionModel, SessionData
 from settings import Settings
 from dataset.database import index
-from models.zephyr import get_prompt, zephyr_qa_prompt, get_model
-
-from llama_index.core.llms import ChatMessage
+from models.zephyr import get_prompt, zephyr_qa_prompt, get_model, tools
 
 
 app = FastAPI(title=f"{Settings.PROJECT_NAME} API",
@@ -22,16 +20,23 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-# async def get_api_key(authorization: str = Header(...)):
-#     expected_key = Settings.SECRET_KEY
-#     if authorization != f"Bearer {expected_key}":
-#         raise HTTPException(status_code=401, detail="Invalid API key")
-#     return authorization
+async def get_api_key(authorization: str = Header(...)):
+    expected_key = Settings.SECRET_KEY
+    if authorization != f"Bearer {expected_key}":
+        raise HTTPException(status_code=401, detail="Invalid API key")
+    return authorization
 
 
 def get_retriever(index):
     retriever = index.as_retriever(similarity_top_k=2)
     return retriever
+
+
+def get_info_from_docs(query: str) -> str:
+    """Get information about GDSC and whenever asked about a person ONLY WHEN USING THEIR NAMES use this to query the database about GDSC and its members. If user asks using pronouns, DON'T use this."""
+    retriever = get_retriever(index)
+    context = retriever.retrieve(query)
+    return context[0].text
 
 
 from uuid import uuid4
@@ -42,7 +47,7 @@ from fastapi import Response
 async def create_chat(response: Response):
     session = uuid4()
     chat = []
-    chat.append(ChatMessage(role="system", content = zephyr_qa_prompt))
+    chat.append({"role": "system", "content":zephyr_qa_prompt})
     data = SessionData(chat_history=chat)
 
     await backend.create(session, data)
@@ -51,7 +56,7 @@ async def create_chat(response: Response):
 
 
 @app.post("/chat")
-async def handle_chat(question_model: QuestionModel):
+async def handle_chat(question_model: QuestionModel,  api_key: str = Depends(get_api_key)):
     question = question_model.question
     session = question_model.session_id
     llm = get_model()
@@ -62,16 +67,35 @@ async def handle_chat(question_model: QuestionModel):
     except :
         return {"error": "No session found"}, 500
     
-    retriever = get_retriever(index)
-    context = retriever.retrieve(question)
-    chat.append(ChatMessage(role="user", content = get_prompt(context[0].text, question)))
+    chat.append({"role": "user", "content": question})
 
+    # try:
+    response = llm.chat.completions.create(
+        model = "gpt-3.5-turbo-0125",
+        messages = chat,
+        tools = tools
+        )
+    resp = response.choices[0].message
+    chat.append(resp)
+    tool_calls = resp.tool_calls
+    
     try:
-        response = llm.chat(chat)
-        resp = str(response.message)[10:]
-        chat.append(ChatMessage(role="assistant", content = resp))
+        if tool_calls:
+            for tool_call in tool_calls:
+                func_resp = get_info_from_docs(question)
+                chat.append({
+                    "tool_call_id": tool_call.id,
+                    "role": "tool",
+                    "name": "get_info_from_docs",
+                    "content": func_resp,
+                })
+                response = llm.chat.completions.create(
+                    model = "gpt-3.5-turbo-0125",
+                    messages = chat
+                )
+                resp = response.choices[0].message
         await backend.update(session, session_data)
-        return {"answer": resp}, 200
+        return {"answer": resp.content}, 200
     except Exception as e:
         return {"error": str(e)}, 500
 
