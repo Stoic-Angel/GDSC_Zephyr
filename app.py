@@ -5,10 +5,36 @@ from request_parser.chat_schemas import SourceModel, QuestionModel, SessionData
 from settings import Settings
 from dataset.database import index
 from models.zephyr import get_prompt, zephyr_qa_prompt, get_model, tools
+import json
+import asyncio
+import contextlib
+from datetime import datetime, timedelta, UTC
 
+from contextlib import asynccontextmanager
+
+@asynccontextmanager
+async def lifespan(app: FastAPI):
+    """Launch an async task to clean expired sessions periodically."""
+
+    async def cleanup():
+        while True:
+            now = datetime.now(UTC)
+            expired_tokens = [
+                token for token, data in backend.data.items()
+                if (now - data.time_created) > timedelta(hours=Settings.SESSION_EXPIRY)
+            ]
+            if expired_tokens:
+                await asyncio.gather(*(backend.delete(token) for token in expired_tokens))
+            await asyncio.sleep(3600)
+
+    cleanup_task = asyncio.create_task(cleanup())
+    yield 
+    cleanup_task.cancel()
+    with contextlib.suppress(asyncio.CancelledError):
+        await cleanup_task
 
 app = FastAPI(title=f"{Settings.PROJECT_NAME} API",
-              version=Settings.PROJECT_VERSION)
+              version=Settings.PROJECT_VERSION, lifespan=lifespan)
 
 origins = ["*"]
 
@@ -33,7 +59,7 @@ def get_retriever(index):
 
 
 def get_info_from_docs(query: str) -> str:
-    """Get information about GDSC and whenever asked about a person ONLY WHEN USING THEIR NAMES use this to query the database about GDSC and its members. If user asks using pronouns, DON'T use this."""
+    """Get information about GDG OnCampus JSSATEN and it's members and the events in conducts. Whenever asked about people using their names, use this tool. Whenever asked about GDSC events, use this tool. DONT use the tool when the question is not related to GDSC or it is a general question."""
     retriever = get_retriever(index)
     context = retriever.retrieve(query)
     return context[0].text
@@ -43,20 +69,19 @@ from uuid import uuid4
 from session import backend, cookie
 from fastapi import Response
 
-@app.post("/create_chat")
-async def create_chat(response: Response):
+@app.get("/create_chat")
+async def create_chat(_: str = Depends(get_api_key)):
     session = uuid4()
     chat = []
     chat.append({"role": "system", "content":zephyr_qa_prompt})
-    data = SessionData(chat_history=chat)
+    data = SessionData(time_created=datetime.now(UTC), chat_history=chat)
 
     await backend.create(session, data)
-    cookie.attach_to_response(response, session)
     return { "session_id": session }, 200
 
 
 @app.post("/chat")
-async def handle_chat(question_model: QuestionModel, api_key: str = Depends(get_api_key)):
+async def handle_chat(question_model: QuestionModel):
     question = question_model.question
     session = question_model.session_id
     llm = get_model()
@@ -82,7 +107,8 @@ async def handle_chat(question_model: QuestionModel, api_key: str = Depends(get_
     try:
         if tool_calls:
             for tool_call in tool_calls:
-                func_resp = get_info_from_docs(question)
+                function_args = json.loads(tool_call.function.arguments)
+                func_resp = get_info_from_docs(function_args.get("query"))
                 chat.append({
                     "tool_call_id": tool_call.id,
                     "role": "tool",

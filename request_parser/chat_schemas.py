@@ -1,6 +1,7 @@
 from pydantic import BaseModel
 from uuid import UUID
 from llama_index.core.llms import ChatMessage
+from datetime import datetime
 
 class SourceModel(BaseModel):
     source: str
@@ -13,5 +14,5 @@ class QuestionModel(BaseModel):
     session_id: UUID
 
 class SessionData(BaseModel):
-    # session_id : str
+    time_created : datetime
     chat_history : list
