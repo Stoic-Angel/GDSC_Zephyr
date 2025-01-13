@@ -6,3 +6,9 @@ render.yaml
 db/
 token.json
 client_secret.json
+final_data.txt
+poetry.lock
+pyproject.toml
+final_copy.csv
+.venv
+dataset\dataset.csv

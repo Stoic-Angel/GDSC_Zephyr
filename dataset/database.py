@@ -1,15 +1,14 @@
 from llama_index.core import Document
 from llama_index.core.schema import MetadataMode
 from llama_index.core import VectorStoreIndex
-from llama_index.core.node_parser import SentenceSplitter
+# from llama_index.core.node_parser import SentenceSplitter
 
-from models.zephyr import get_embed_model
+from models.zephyr import get_model
 
 import pandas as pd
 
 def load_doc():
     df = pd.read_csv("final.csv")
-
     with open("final_data.txt", "w") as f:
         for i in range(len(df)):
             f.write(f"# {df.iloc[i, 0]} \n")
@@ -31,13 +30,11 @@ def load_doc():
         doc.append(document)
     return doc
 
-def get_index(documents, embed_model):
-
+def get_index(documents):
 #   text_splitter = SentenceSplitter(chunk_size=128, chunk_overlap=16)
-  index =  VectorStoreIndex.from_documents(documents)
-  return index
+    index = VectorStoreIndex.from_documents(documents)
+    return index
 
-
-embed_model = get_embed_model()
+llm = get_model()
 doc = load_doc()
-index = get_index(doc, embed_model)
+index = get_index(doc)

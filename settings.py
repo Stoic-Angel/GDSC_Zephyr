@@ -14,5 +14,7 @@ class Settings:
     JWT_ALGORITHM = os.getenv("JWT_ALGORITHM")
     ACCESS_TOKEN_EXPIRE_MINUTES = int(os.getenv("ACCESS_TOKEN_EXPIRE_MINUTES"))
 
+    SESSION_EXPIRY = int(os.getenv("SESSION_EXPIRY"))
+
     SECRET_KEY = os.getenv("SECRET_KEY")
     OPENAI_API_KEY = os.getenv("OPENAI_API_KEY")
