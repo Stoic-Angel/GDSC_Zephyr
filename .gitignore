@@ -12,3 +12,4 @@ pyproject.toml
 final_copy.csv
 .venv
 dataset\dataset.csv
+app.log

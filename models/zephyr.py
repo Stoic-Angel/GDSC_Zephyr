@@ -5,17 +5,19 @@ from llama_index.embeddings.openai import OpenAIEmbedding
 
 from openai import OpenAI
 
-
 def get_model():
+    try:
+        embed_model = OpenAIEmbedding(model="text-embedding-3-large")
+        Settings.embed_model = embed_model
 
-    embed_model = OpenAIEmbedding(model="text-embedding-3-large")
-    Settings.embed_model = embed_model
-
-    llm = OpenAI()
-    # llm = OpenAI("gpt-3.5-turbo-0125", temperature=0.9)
-    Settings.llm = llm
-
-    return llm
+        llm = OpenAI()
+        # llm = OpenAI("gpt-3.5-turbo-0125", temperature=0.9)
+        Settings.llm = llm
+        return llm
+    
+    except:
+        return
+       
 
 
 tools = [

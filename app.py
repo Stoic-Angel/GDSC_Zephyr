@@ -10,8 +10,23 @@ import asyncio
 import contextlib
 from datetime import datetime, timedelta, UTC
 
-from contextlib import asynccontextmanager
+import logging
+from logging.handlers import RotatingFileHandler
 
+logging.basicConfig(level=logging.DEBUG, force=True)
+logger = logging.getLogger("uvicorn")
+
+file_handler = RotatingFileHandler("app.log", maxBytes=5 * 1024 * 1024, backupCount=3)
+logger.addHandler(file_handler)
+
+log_format = "%(asctime)s - %(levelname)s - %(message)s"
+for handler in logger.handlers:
+    handler.setLevel(logging.DEBUG)
+    handler.setFormatter(logging.Formatter(log_format))
+
+logger.setLevel(logging.DEBUG)
+
+from contextlib import asynccontextmanager
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     """Launch an async task to clean expired sessions periodically."""
@@ -77,6 +92,8 @@ async def create_chat(_: str = Depends(get_api_key)):
     data = SessionData(time_created=datetime.now(UTC), chat_history=chat)
 
     await backend.create(session, data)
+    logger.debug(f"Session created sucessfully for ID: {session} at time: {datetime.now(UTC)}")
+
     return { "session_id": session }, 200
 
 
@@ -84,17 +101,25 @@ async def create_chat(_: str = Depends(get_api_key)):
 async def handle_chat(question_model: QuestionModel):
     question = question_model.question
     session = question_model.session_id
+
+    logger.debug("Fetching LLM")
     llm = get_model()
 
+    if not llm:
+        return {"error": "An error occurred. Please try again later!"}, 500
+
     try:
+        
         session_data = await backend.read(session)
+        logger.debug(f"Session fetched successfully for ID: {session}")
         chat = session_data.chat_history
     except :
+        logger.debug(f"Error fetching session for ID: {session}")
         return {"error": "No session found"}, 500
     
     chat.append({"role": "user", "content": question})
 
-
+    logger.debug(f"Requesting response for messages: {chat}")
     response = llm.chat.completions.create(
         model = "gpt-3.5-turbo-0125",
         messages = chat,
@@ -106,21 +131,27 @@ async def handle_chat(question_model: QuestionModel):
     
     try:
         if tool_calls:
+            logger.debug(f"Tool call detected: {tool_calls}")
             for tool_call in tool_calls:
                 function_args = json.loads(tool_call.function.arguments)
                 func_resp = get_info_from_docs(function_args.get("query"))
+                logger.debug(f"Tool response: {func_resp}")
                 chat.append({
                     "tool_call_id": tool_call.id,
                     "role": "tool",
                     "name": "get_info_from_docs",
                     "content": func_resp,
                 })
+
                 response = llm.chat.completions.create(
                     model = "gpt-3.5-turbo-0125",
                     messages = chat
                 )
                 resp = response.choices[0].message
+
         await backend.update(session, session_data)
+        logger.debug(f"Returning LLM response: {resp.content}")
+
         return {"answer": resp.content}, 200
     except Exception as e:
         return {"error": str(e)}, 500
