@@ -109,7 +109,6 @@ async def handle_chat(question_model: QuestionModel):
         return {"error": "An error occurred. Please try again later!"}, 500
 
     try:
-        
         session_data = await backend.read(session)
         logger.debug(f"Session fetched successfully for ID: {session}")
         chat = session_data.chat_history
