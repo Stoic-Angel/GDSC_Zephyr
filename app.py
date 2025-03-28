@@ -33,12 +33,15 @@ async def lifespan(app: FastAPI):
 
     async def cleanup():
         while True:
+            logger.debug("Cleaning up!")
             now = datetime.now(UTC)
             expired_tokens = [
                 token for token, data in backend.data.items()
                 if (now - data.time_created) > timedelta(hours=Settings.SESSION_EXPIRY)
             ]
+
             if expired_tokens:
+                logger.debug(f"Found expired tokens: {expired_tokens} Deleting..")
                 await asyncio.gather(*(backend.delete(token) for token in expired_tokens))
             await asyncio.sleep(3600)
 
@@ -69,7 +72,7 @@ async def get_api_key(authorization: str = Header(...)):
 
 
 def get_retriever(index):
-    retriever = index.as_retriever(similarity_top_k=2)
+    retriever = index.as_retriever(similarity_top_k=5)
     return retriever
 
 
@@ -77,7 +80,17 @@ def get_info_from_docs(query: str) -> str:
     """Get information about GDG OnCampus JSSATEN and it's members and the events in conducts. Whenever asked about people using their names, use this tool. Whenever asked about GDSC events, use this tool. DONT use the tool when the question is not related to GDSC or it is a general question."""
     retriever = get_retriever(index)
     context = retriever.retrieve(query)
-    return context[0].text
+    return context
+
+
+async def read_with_retries(session_id, retries=3, delay=5):
+    for attempt in range(retries):
+        session_data = await backend.read(session_id)
+        if session_data:
+            return session_data
+        logger.debug("Session fetch failed! Retrying...")
+        await asyncio.sleep(delay * (2 ** attempt))  # Exponential backoff
+    return None  # Give up after retries
 
 
 from uuid import uuid4
@@ -102,18 +115,15 @@ async def handle_chat(question_model: QuestionModel):
     question = question_model.question
     session = question_model.session_id
 
-    logger.debug("Fetching LLM")
-    llm = get_model()
-
-    if not llm:
-        return {"error": "An error occurred. Please try again later!"}, 500
-
     try:
-        session_data = await backend.read(session)
-        logger.debug(f"Session fetched successfully for ID: {session}")
+        logger.debug("Fetching LLM")
+        llm = get_model()
+        session_data = await read_with_retries(session)
         chat = session_data.chat_history
-    except :
-        logger.debug(f"Error fetching session for ID: {session}")
+        logger.debug(f"Session fetched successfully for ID: {session} and data: {session_data}")
+    except Exception as e:
+        logger.debug(f"This is session data: {session_data}")
+        logger.debug(f"Error fetching session for ID: {session} due to {e}")
         return {"error": "No session found"}, 500
     
     chat.append({"role": "user", "content": question})
@@ -122,7 +132,8 @@ async def handle_chat(question_model: QuestionModel):
     response = llm.chat.completions.create(
         model = "gpt-3.5-turbo-0125",
         messages = chat,
-        tools = tools
+        tools = tools,
+        temperature=0.15,
         )
     resp = response.choices[0].message
     chat.append(resp)
@@ -132,19 +143,20 @@ async def handle_chat(question_model: QuestionModel):
         if tool_calls:
             logger.debug(f"Tool call detected: {tool_calls}")
             for tool_call in tool_calls:
-                function_args = json.loads(tool_call.function.arguments)
+                function_args = json.loads(tool_call.function.arguments)    
                 func_resp = get_info_from_docs(function_args.get("query"))
                 logger.debug(f"Tool response: {func_resp}")
                 chat.append({
                     "tool_call_id": tool_call.id,
                     "role": "tool",
                     "name": "get_info_from_docs",
-                    "content": func_resp,
+                    "content": str(func_resp),
                 })
 
                 response = llm.chat.completions.create(
                     model = "gpt-3.5-turbo-0125",
-                    messages = chat
+                    messages = chat,
+                    temperature=0.15,
                 )
                 resp = response.choices[0].message
 
@@ -158,4 +170,4 @@ async def handle_chat(question_model: QuestionModel):
 
 @app.get("/")
 async def root():
-    return responses.RedirectResponse(url="/docs")
+    return {"message": "Welcome to Zephyr!"}

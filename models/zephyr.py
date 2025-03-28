@@ -1,23 +1,19 @@
-from settings import Settings
 from llama_index.core import Settings
 from llama_index.llms.openai import OpenAI
 from llama_index.embeddings.openai import OpenAIEmbedding
 
+
 from openai import OpenAI
 
 def get_model():
-    try:
-        embed_model = OpenAIEmbedding(model="text-embedding-3-large")
-        Settings.embed_model = embed_model
+    embed_model = OpenAIEmbedding(model="text-embedding-3-large")
+    Settings.embed_model = embed_model
+    Settings.chunk_size = 256
+    Settings.chunk_overlap = 64
 
-        llm = OpenAI()
-        # llm = OpenAI("gpt-3.5-turbo-0125", temperature=0.9)
-        Settings.llm = llm
-        return llm
-    
-    except:
-        return
-       
+    llm = OpenAI()
+    # llm = OpenAI("gpt-3.5-turbo-0125", temperature=0.9)
+    return llm
 
 
 tools = [

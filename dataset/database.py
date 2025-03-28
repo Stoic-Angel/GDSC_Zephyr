@@ -1,6 +1,8 @@
 from llama_index.core import Document
 from llama_index.core.schema import MetadataMode
 from llama_index.core import VectorStoreIndex
+from llama_index.core import StorageContext, load_index_from_storage
+import os
 # from llama_index.core.node_parser import SentenceSplitter
 
 from models.zephyr import get_model
@@ -30,11 +32,18 @@ def load_doc():
         doc.append(document)
     return doc
 
-def get_index(documents):
+def get_index():
 #   text_splitter = SentenceSplitter(chunk_size=128, chunk_overlap=16)
-    index = VectorStoreIndex.from_documents(documents)
+    save_path = "./vector_db"
+
+    if os.path.exists(save_path):
+        storage_context = StorageContext.from_defaults(persist_dir=save_path)
+        index = load_index_from_storage(storage_context)
+    else:
+        doc = load_doc()
+        index = VectorStoreIndex.from_documents(doc)
+        index.storage_context.persist(persist_dir=save_path)
     return index
 
 llm = get_model()
-doc = load_doc()
-index = get_index(doc)
+index = get_index()
