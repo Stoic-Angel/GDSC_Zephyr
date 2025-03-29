@@ -11,7 +11,7 @@ class SourceModel(BaseModel):
 
 class QuestionModel(BaseModel):
     question: str
-    session_id: UUID
+    session_id: str
 
 class SessionData(BaseModel):
     time_created : datetime

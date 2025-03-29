@@ -1,5 +1,6 @@
 from fastapi import FastAPI, responses, Header, HTTPException, Depends
 from fastapi.middleware.cors import CORSMiddleware
+import redis
 
 from request_parser.chat_schemas import SourceModel, QuestionModel, SessionData
 from settings import Settings
@@ -26,33 +27,11 @@ for handler in logger.handlers:
 
 logger.setLevel(logging.DEBUG)
 
-from contextlib import asynccontextmanager
-@asynccontextmanager
-async def lifespan(app: FastAPI):
-    """Launch an async task to clean expired sessions periodically."""
-
-    async def cleanup():
-        while True:
-            logger.debug("Cleaning up!")
-            now = datetime.now(UTC)
-            expired_tokens = [
-                token for token, data in backend.data.items()
-                if (now - data.time_created) > timedelta(hours=Settings.SESSION_EXPIRY)
-            ]
-
-            if expired_tokens:
-                logger.debug(f"Found expired tokens: {expired_tokens} Deleting..")
-                await asyncio.gather(*(backend.delete(token) for token in expired_tokens))
-            await asyncio.sleep(3600)
-
-    cleanup_task = asyncio.create_task(cleanup())
-    yield 
-    cleanup_task.cancel()
-    with contextlib.suppress(asyncio.CancelledError):
-        await cleanup_task
+# Connect to Redis
+redis_client = redis.Redis(host="localhost", port=6379, db=0, decode_responses=True)
 
 app = FastAPI(title=f"{Settings.PROJECT_NAME} API",
-              version=Settings.PROJECT_VERSION, lifespan=lifespan)
+              version=Settings.PROJECT_VERSION)
 
 origins = ["*"]
 
@@ -82,19 +61,8 @@ def get_info_from_docs(query: str) -> str:
     context = retriever.retrieve(query)
     return context
 
-
-async def read_with_retries(session_id, retries=3, delay=5):
-    for attempt in range(retries):
-        session_data = await backend.read(session_id)
-        if session_data:
-            return session_data
-        logger.debug("Session fetch failed! Retrying...")
-        await asyncio.sleep(delay * (2 ** attempt))  # Exponential backoff
-    return None  # Give up after retries
-
-
 from uuid import uuid4
-from session import backend, cookie
+import json
 from fastapi import Response
 
 @app.get("/create_chat")
@@ -102,9 +70,7 @@ async def create_chat(_: str = Depends(get_api_key)):
     session = uuid4()
     chat = []
     chat.append({"role": "system", "content":zephyr_qa_prompt})
-    data = SessionData(time_created=datetime.now(UTC), chat_history=chat)
-
-    await backend.create(session, data)
+    redis_client.setex(str(session), 43200, json.dumps(chat))  # Expire in 12 hours
     logger.debug(f"Session created sucessfully for ID: {session} at time: {datetime.now(UTC)}")
 
     return { "session_id": session }, 200
@@ -118,15 +84,16 @@ async def handle_chat(question_model: QuestionModel):
     try:
         logger.debug("Fetching LLM")
         llm = get_model()
-        session_data = await read_with_retries(session)
-        chat = session_data.chat_history
+        session_data = json.loads(redis_client.get(session))
+        chat = session_data.copy()
         logger.debug(f"Session fetched successfully for ID: {session} and data: {session_data}")
     except Exception as e:
-        logger.debug(f"This is session data: {session_data}")
+        logger.debug(f"This is session data: {session_data}")   
         logger.debug(f"Error fetching session for ID: {session} due to {e}")
         return {"error": "No session found"}, 500
     
     chat.append({"role": "user", "content": question})
+    session_data.append({"role": "user", "content": question})
 
     logger.debug(f"Requesting response for messages: {chat}")
     response = llm.chat.completions.create(
@@ -136,8 +103,8 @@ async def handle_chat(question_model: QuestionModel):
         temperature=0.15,
         )
     resp = response.choices[0].message
-    chat.append(resp)
     tool_calls = resp.tool_calls
+    chat.append(resp)
     
     try:
         if tool_calls:
@@ -160,7 +127,8 @@ async def handle_chat(question_model: QuestionModel):
                 )
                 resp = response.choices[0].message
 
-        await backend.update(session, session_data)
+        session_data.append({"role": "assistant", "content": str(resp.content)})
+        redis_client.setex(session, 43200, json.dumps(session_data))
         logger.debug(f"Returning LLM response: {resp.content}")
 
         return {"answer": resp.content}, 200
