@@ -58,8 +58,14 @@ def get_retriever(index):
 def get_info_from_docs(query: str) -> str:
     """Get information about GDG OnCampus JSSATEN and it's members and the events in conducts. Whenever asked about people using their names, use this tool. Whenever asked about GDSC events, use this tool. DONT use the tool when the question is not related to GDSC or it is a general question."""
     retriever = get_retriever(index)
-    context = retriever.retrieve(query)
-    return context
+    retrieved_nodes = retriever.retrieve(query)
+    
+    if not retrieved_nodes:
+        return "No relevant information found."
+
+    context_texts = [node.text.strip() for node in retrieved_nodes]
+    formatted_context = "\n\n".join(context_texts)
+    return formatted_context
 
 from uuid import uuid4
 import json
@@ -117,7 +123,7 @@ async def handle_chat(question_model: QuestionModel):
                     "tool_call_id": tool_call.id,
                     "role": "tool",
                     "name": "get_info_from_docs",
-                    "content": str(func_resp),
+                    "content": get_prompt(str(func_resp), question),
                 })
 
                 response = llm.chat.completions.create(

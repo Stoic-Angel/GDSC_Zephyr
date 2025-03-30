@@ -11,26 +11,22 @@ import pandas as pd
 
 def load_doc():
     df = pd.read_csv("final.csv")
-    with open("final_data.txt", "w") as f:
-        for i in range(len(df)):
-            f.write(f"# {df.iloc[i, 0]} \n")
-            f.write(f"{df.iloc[i,1]} \n")
 
-    doc = []
-    for i in range(len(df)):
-        document = Document(
-        text=f"# {df.iloc[i,0]}\n{df.iloc[i,1]}\n",
-        metadata={
-            "file_name": "zephyr_kb.txt",
-            "title": df.iloc[i, 0]
-        },
-        excluded_llm_metadata_keys=["file_name"],
-        metadata_seperator="::",
-        metadata_template="{key}=>{value}",
-        text_template="Metadata: {metadata_str}\n-----\nContent: {content}",
-        )
-        doc.append(document)
-    return doc
+    docs = [
+        Document(
+            text=f"Title: {row[0]}\nContent: {row[1]}\n",
+            metadata={
+                "file_name": "final.csv",  # Dynamically referencing CSV file
+                "title": row[0]
+            },
+            excluded_llm_metadata_keys=["file_name"],
+            metadata_seperator="::",
+            metadata_template="{key}=>{value}",
+            text_template="Metadata: {metadata_str}\n-----\nContent: {content}",
+        ) for row in df.itertuples(index=False)
+    ]
+    
+    return docs
 
 def get_index():
 #   text_splitter = SentenceSplitter(chunk_size=128, chunk_overlap=16)
