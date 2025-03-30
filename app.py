@@ -2,14 +2,10 @@ from fastapi import FastAPI, responses, Header, HTTPException, Depends
 from fastapi.middleware.cors import CORSMiddleware
 import redis
 
-from request_parser.chat_schemas import SourceModel, QuestionModel, SessionData
+from request_parser.chat_schemas import QuestionModel
 from settings import Settings
-from dataset.database import index
-from models.zephyr import get_prompt, zephyr_qa_prompt, get_model, tools
 import json
-import asyncio
-import contextlib
-from datetime import datetime, timedelta, UTC
+from datetime import datetime, UTC
 
 import logging
 from logging.handlers import RotatingFileHandler
@@ -50,22 +46,51 @@ async def get_api_key(authorization: str = Header(...)):
     return authorization
 
 
-def get_retriever(index):
-    retriever = index.as_retriever(similarity_top_k=5)
-    return retriever
+from google import genai
+from google.genai import types
+from google.api_core.exceptions import ResourceExhausted
 
+client = genai.Client()
+model = 'models/gemini-1.5-flash-001'
+cache = None
+TTL = 3559
 
-def get_info_from_docs(query: str) -> str:
-    """Get information about GDG OnCampus JSSATEN and it's members and the events in conducts. Whenever asked about people using their names, use this tool. Whenever asked about GDSC events, use this tool. DONT use the tool when the question is not related to GDSC or it is a general question."""
-    retriever = get_retriever(index)
-    retrieved_nodes = retriever.retrieve(query)
+async def create_cache():
+    global cache  # Access the global cache variable
     
-    if not retrieved_nodes:
-        return "No relevant information found."
+    # Read the content from the file
+    with open('zephyr.txt', 'r') as f:
+        file_content = f.read()
+    
+    # Create a cache with a 5 minute TTL, embedding file content in system_instruction
+    cache = client.caches.create(
+        model=model,
+        config=types.CreateCachedContentConfig(
+            display_name='GDG OnCampus Zephyr',  # used to identify the cache
+            system_instruction=(
+                "You are a virtual AI assistance named Zephyr (exclusive to GDG OnCampus (previously GDSC) JSSATEN ) whose job is to clear the doubts of students related to  GDG OnCampus (previously GDSC) JSSATEN club. AVOID any political or controversial topic.\
+  YOU CAN answer questions that are not about GDG OnCampus or its members with your general knowledge. YOU MUST KEEP YOUR ANSWER SHORT. Dont give links unless specifically asked for. \
+  If you are not able to answer query using the context, just reply 'Sorry, I didn't get that. You can try contacting GDG OnCampus members directly from https://www.instagram.com/gdgoncampus.jss/' \
+  This is the data related to GDG OnCampus and you should use this for context regarding the society, the people, the process for recruitment and everything."
+             + file_content  # Add the file content here
+            ),
+            ttl=f"{TTL}s",  # 5 minutes TTL
+        )
+    )
 
-    context_texts = [node.text.strip() for node in retrieved_nodes]
-    formatted_context = "\n\n".join(context_texts)
-    return formatted_context
+
+async def refresh_cache():
+    global cache
+    try:
+        cache_info = client.caches.get(name=cache.name)
+        return
+    except Exception as e:
+        # If the cache is not found (expired), create a new one
+        logger.debug(f"Cache expired or not found. Creating a new cache... Error: {e}")
+        await create_cache()
+        logger.debug("New cache created.")
+
+
 
 from uuid import uuid4
 import json
@@ -75,7 +100,6 @@ from fastapi import Response
 async def create_chat(_: str = Depends(get_api_key)):
     session = uuid4()
     chat = []
-    chat.append({"role": "system", "content":zephyr_qa_prompt})
     redis_client.setex(str(session), 43200, json.dumps(chat))  # Expire in 12 hours
     logger.debug(f"Session created sucessfully for ID: {session} at time: {datetime.now(UTC)}")
 
@@ -88,56 +112,38 @@ async def handle_chat(question_model: QuestionModel):
     session = question_model.session_id
 
     try:
-        logger.debug("Fetching LLM")
-        llm = get_model()
-        session_data = json.loads(redis_client.get(session))
-        chat = session_data.copy()
-        logger.debug(f"Session fetched successfully for ID: {session} and data: {session_data}")
+        logger.debug("Fetching Session")
+        chat = json.loads(redis_client.get(session))
+        logger.debug(f"Session fetched successfully for ID: {session} and data: {chat}")
     except Exception as e:
-        logger.debug(f"This is session data: {session_data}")   
         logger.debug(f"Error fetching session for ID: {session} due to {e}")
         return {"error": "No session found"}, 500
     
     chat.append({"role": "user", "content": question})
-    session_data.append({"role": "user", "content": question})
-
     logger.debug(f"Requesting response for messages: {chat}")
-    response = llm.chat.completions.create(
-        model = "gpt-3.5-turbo-0125",
-        messages = chat,
-        tools = tools,
-        temperature=0.15,
-        )
-    resp = response.choices[0].message
-    tool_calls = resp.tool_calls
-    chat.append(resp)
     
     try:
-        if tool_calls:
-            logger.debug(f"Tool call detected: {tool_calls}")
-            for tool_call in tool_calls:
-                function_args = json.loads(tool_call.function.arguments)    
-                func_resp = get_info_from_docs(function_args.get("query"))
-                logger.debug(f"Tool response: {func_resp}")
-                chat.append({
-                    "tool_call_id": tool_call.id,
-                    "role": "tool",
-                    "name": "get_info_from_docs",
-                    "content": get_prompt(str(func_resp), question),
-                })
+        await refresh_cache() # Refresh cache if expired
 
-                response = llm.chat.completions.create(
-                    model = "gpt-3.5-turbo-0125",
-                    messages = chat,
-                    temperature=0.15,
-                )
-                resp = response.choices[0].message
+        response = client.models.generate_content(
+            model = model,
+            contents = json.dumps(chat),
+            config = types.GenerateContentConfig(
+                cached_content=cache.name,
+                temperature=0.2,
+                automatic_function_calling=types.AutomaticFunctionCallingConfig(disable=True)
+            )
+        )
 
-        session_data.append({"role": "assistant", "content": str(resp.content)})
-        redis_client.setex(session, 43200, json.dumps(session_data))
-        logger.debug(f"Returning LLM response: {resp.content}")
+        resp = response.text
+        chat.append({"role": "assistant", "content": str(resp)})
+        redis_client.setex(session, 43200, json.dumps(chat))
+        logger.debug(f"Returning LLM response: {resp}")
 
-        return {"answer": resp.content}, 200
+        return {"answer": resp}, 200
+    
+    except ResourceExhausted:  # Catch token limit error
+        raise HTTPException(status_code=503, detail="Our servers are full. Please try again later.")
     except Exception as e:
         return {"error": str(e)}, 500
 

@@ -1,18 +1,22 @@
-from llama_index.core import Settings
-from llama_index.llms.openai import OpenAI
-from llama_index.embeddings.openai import OpenAIEmbedding
+# from llama_index.core import Settings
+# from llama_index.llms.openai import OpenAI
+# from llama_index.embeddings.openai import OpenAIEmbedding
 
 
-from openai import OpenAI
+# from openai import OpenAI
+
+from google import genai
 
 def get_model():
-    embed_model = OpenAIEmbedding(model="text-embedding-3-large")
-    Settings.embed_model = embed_model
-    Settings.chunk_size = 256
-    Settings.chunk_overlap = 64
+    # embed_model = OpenAIEmbedding(model="text-embedding-3-large")
+    # Settings.embed_model = embed_model
+    # Settings.chunk_size = 256
+    # Settings.chunk_overlap = 64
 
-    llm = OpenAI()
+    # llm = OpenAI()
     # llm = OpenAI("gpt-3.5-turbo-0125", temperature=0.9)
+
+    llm = genai.Client()
     return llm
 
 
@@ -59,7 +63,7 @@ zephyr_qa_prompt = f"You are a virtual AI assistance named Zephyr (exclusive to 
 def get_prompt(context, question) -> str:
   prompt = f"This is the Query: {question} \
     This is context related to the query: {context} \
-    ONLY answer from the given context if the context is SUFFICIENT to answer the query! DONT HALLUCINATE or MAKEUP things! Stick to your default response if context is insufficient, that is:\
+    ONLY answer from the given  context if the context is SUFFICIENT to answer the query! DONT HALLUCINATE or MAKEUP things! Stick to your default response if context is insufficient, that is:\
     'Sorry, I didn't get that. You can try contacting GDG OnCampus members directly from https://www.instagram.com/gdgoncampus.jss/'"
 
   return prompt
