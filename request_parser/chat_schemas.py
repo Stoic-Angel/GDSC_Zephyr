@@ -1,6 +1,6 @@
 from pydantic import BaseModel
 from uuid import UUID
-from llama_index.core.llms import ChatMessage
+# from llama_index.core.llms import ChatMessage
 from datetime import datetime
 
 class SourceModel(BaseModel):
